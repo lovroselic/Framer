@@ -8,16 +8,19 @@ Created on Sun Nov 17 09:18:04 2024
 import os
 import random
 from PIL import Image
+import time
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 # Directories
 FRAMES_DIR = "Frames"  # Directory containing frame images
 PICS_DIR = "Pics"      # Directory containing pictures to be framed
 OUTPUT_DIR = "Output"  # Directory to save framed pictures
 
-FILENAME = "TEST"
+FILENAME = "UnusedEdtitiesFramed"
 
 resizeW = 768
+counter = 1
+JPG_QUALITY = 80
 
 # Ensure output directory exists
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -42,9 +45,10 @@ def get_inner_width(frame_image):
     return None  
 
 # Main workflow
-def frame_pictures():
-    print(f"************** Framer v{VERSION}**************")
-    counter = 1
+def frame_pictures(counter):
+    print(f"\n************** Framer v{VERSION}**************")
+    start_time = time.time()
+    
     # Get lists of pictures and frames
     pictures = [f for f in os.listdir(PICS_DIR) if f.lower().endswith(('png', 'jpg', 'jpeg'))]
     frames = [f for f in os.listdir(FRAMES_DIR) if f.lower().endswith(('png', 'jpg', 'jpeg'))]
@@ -82,15 +86,19 @@ def frame_pictures():
 
         # Save the combined image to the output directory
         filename = f"{FILENAME}_{str(counter).zfill(3)}"
-        output_path = os.path.join(OUTPUT_DIR, f"{filename}.png")
-        #combined_image.save(output_path, "PNG")
-        resizedFinalImage.save(output_path, "PNG")
+        output_path = os.path.join(OUTPUT_DIR, f"{filename}.jpg")
+        resizedFinalImage = resizedFinalImage.convert("RGB")  
+        resizedFinalImage.save(output_path, "JPEG", quality=JPG_QUALITY)
         counter += 1
 
-        print(f"Pic {picture_file} --> {filename}")
+
+        print(f"Pic {picture_file} , frame:{frame_file} --> {filename}")
         
     print("************** DONE **************")
+    end_time = time.time()  # End timing
+    elapsed_time = end_time - start_time
+    print(f"Total execution time: {elapsed_time:.2f} seconds")
 
 # Execute the main workflow
 if __name__ == "__main__":
-    frame_pictures()
+    frame_pictures(counter)
