@@ -1,0 +1,20 @@
+Project: Framer
+Python
+
+USing a frame image, and merge it with arbitrary picture to created framed picture.
+
+Directory 'Frames' contains frames. $outerWidth is the wifth of the image, $innerWidth is the width of the transparent part, where we will insert the picture.
+Directory 'Pics' contains pictures which will be framed.
+Directory 'Output' is used to save results.
+
+Workflow:
+For each picture in 'Pics'
+	select picture $pic
+	select random $frame from 'Frames'
+	determine the $innerWidth of $frame
+	resize (reduce size) of $pic so it's $width will be equal to $innerWidth
+	combine $pic and $frame ($frame needs to be top layer)
+	save this resulted pic in dir 'Output'
+	
+	
+
