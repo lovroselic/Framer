@@ -8,7 +8,7 @@ import os
 from PIL import Image, ImageStat
 import time
 
-VERSION = "0.1.0"
+VERSION = "0.2.0"
 
 # Directories
 INPUT_DIR = "input"  # Directory containing input PNG files
@@ -17,11 +17,11 @@ OUTPUT_DIR = "Output"  # Directory to save output images
 
 # Configurable parameters
 CENTER_REGION_SIZE = 768  # Size of the central region (square)
-COLOR_TOLERANCE = 50  # Tolerance for matching canvas color
+COLOR_TOLERANCE = 100  # Tolerance for matching canvas color
 EXPECTED_RESOLUTION = 1024
 
 FILENAME = "GenericFrame"
-counter = 1
+counter = 65
 
 # Ensure output directory exists
 os.makedirs(OUTPUT_DIR, exist_ok=True)
@@ -54,48 +54,59 @@ def is_similar_color(pixel_color, dominant_color, tolerance):
     return all(abs(pixel_color[i] - dominant_color[i]) <= tolerance for i in range(3))
 
 def find_canvas_edges(image, dominant_color):
+    """
+    Find the top, bottom, left, and right edges of the canvas.
+    Args:
+        image (PIL.Image): The input image.
+        dominant_color (tuple): The dominant color of the canvas.
+    Returns:
+        tuple: (top_left, bottom_right) coordinates of the rectangular canvas.
+    """
     width, height = image.size
     pixels = image.load()
 
     # Initialize edges with the center region
     center_x, center_y = width // 2, height // 2
     half_region = CENTER_REGION_SIZE // 2
-    top_left = [center_x - half_region, center_y - half_region]
-    bottom_right = [center_x + half_region, center_y + half_region]
 
-    # Search outward for top-left edge
+    # Start with safe defaults
+    top_edge = center_y - half_region
+    bottom_edge = center_y + half_region
+    left_edge = center_x - half_region
+    right_edge = center_x + half_region
+
+    # Search for the top edge
+    for y in range(center_y - half_region, -1, -1):  # Upward
+        if any(not is_similar_color(pixels[center_x, y][:3], dominant_color, COLOR_TOLERANCE) for x in range(width)):
+            top_edge = y + 1  # Set the first valid row
+            break
+
+    # Search for the bottom edge
+    for y in range(center_y + half_region, height):  # Downward
+        if any(not is_similar_color(pixels[center_x, y][:3], dominant_color, COLOR_TOLERANCE) for x in range(width)):
+            bottom_edge = y - 1  # Set the last valid row
+            break
+
+    # Search for the left edge
     for x in range(center_x - half_region, -1, -1):  # Leftward
-        if x < 0:
+        if any(not is_similar_color(pixels[x, center_y][:3], dominant_color, COLOR_TOLERANCE) for y in range(height)):
+            left_edge = x + 1  # Set the first valid column
             break
-        for y in range(center_y - half_region, -1, -1):  # Upward
-            if y < 0:
-                break
-            if not is_similar_color(pixels[x, y][:3], dominant_color, COLOR_TOLERANCE):
-                top_left = [max(0, x + 1), max(0, y + 1)]  # Constrain to bounds
-                print(f"..top left color: {pixels[x, y][:3]}")
-                break
-        else:
-            continue
-        break
 
-    # Search outward for bottom-right edge
+    # Search for the right edge
     for x in range(center_x + half_region, width):  # Rightward
-        if x >= width:
+        if any(not is_similar_color(pixels[x, center_y][:3], dominant_color, COLOR_TOLERANCE) for y in range(height)):
+            right_edge = x - 1  # Set the last valid column
             break
-        for y in range(center_y + half_region, height):  # Downward
-            if y >= height:
-                break
-            if not is_similar_color(pixels[x, y][:3], dominant_color, COLOR_TOLERANCE):
-                bottom_right = [min(width - 1, x - 1), min(height - 1, y - 1)]  # Constrain to bounds
-                print(f"..bottom right color: {pixels[x, y][:3]}")
-                break
-        else:
-            continue
-        break
 
-    return tuple(top_left), tuple(bottom_right)
+    # Construct the rectangle from the detected edges
+    print(f"..top edge: {top_edge}, bottom edge: {bottom_edge}, left edge: {left_edge}, right edge: {right_edge}")
+    top_left = (max(0, left_edge), max(0, top_edge))
+    bottom_right = (min(width - 1, right_edge), min(height - 1, bottom_edge))
 
-
+    print(f"...top left color {pixels[left_edge-1, top_edge-1][:3]}")
+    print(f"...bottom right color {pixels[right_edge+1, bottom_edge+1][:3]}")
+    return top_left, bottom_right
 
 def apply_transparency(image, top_left, bottom_right):
     pixels = image.load()
