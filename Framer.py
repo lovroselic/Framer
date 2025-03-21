@@ -10,16 +10,22 @@ import random
 from PIL import Image
 import time
 
-VERSION = "0.2.0"
+VERSION = "0.2.3"
 # Directories
 FRAMES_DIR = "Frames"  # Directory containing frame images
 PICS_DIR = "Pics"      # Directory containing pictures to be framed
 OUTPUT_DIR = "Output"  # Directory to save framed pictures
 
-FILENAME = "UnusedEdtitiesFramed"
+# FILENAME = "FemDommes"
+# FILENAME = "Apparitia"
+# FILENAME = "CCC"
+# FILENAME = "AA_big_"
 
 resizeW = 768
-counter = 1
+# resizeW = 520
+# counter = 13000
+# counter = 1000
+counter = 100
 JPG_QUALITY = 80
 
 # Ensure output directory exists
